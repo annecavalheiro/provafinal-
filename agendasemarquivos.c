@@ -1,220 +1,85 @@
-//agenda sem arquivos
+// agenda sem arquivos
 
 #include <stdio.h>
 #include <string.h>
+#define MAX 100
 
-#define MAX_CONTATOS 100
-
-// Enum para representar a situação do contato
-typedef enum {
-    INATIVO = 0, // Usado para a remoção lógica
-    NORMAL,
-    FAVORITO,
-    BLOQUEADO
-} SituacaoContato;
-
-// Struct aninhada para o endereço
+typedef enum { INATIVO = 0, NORMAL, FAVORITO, BLOQUEADO } Status;
 typedef struct {
     char rua[50];
     int numero;
-    char bairro[50];
-    char cidade[50];
-} DadosEndereco;
+} Endereco;
 
-// Struct principal do contato
 typedef struct {
     int id;
     char nome[50];
     char telefone[20];
-    char email[50];
-    DadosEndereco endereco;
-    SituacaoContato status;
+    Endereco end; // Struct aninhada
+    Status status;
 } Contato;
 
-// --- Protótipos das Funções ---
-void cadastrarContato(Contato agenda[], int *contador);
-void listarContatos(Contato agenda[], int contador);
-void buscarContatoPorId(Contato agenda[], int contador);
-void atualizarTelefone(Contato agenda[], int contador);
-void removerContato(Contato agenda[], int contador);
+// --- PROTÓTIPOS OBRIGATÓRIOS DAS FUNÇÕES ---
+void lerTxt(char *msg, char *v, int t);
+void cadastrar(Contato ag[], int *tot);
 
 int main() {
-    Contato agenda[MAX_CONTATOS];
-    int contador = 0; // Controla a quantidade de cadastros e ajuda a gerar IDs
-    int opcao;
+    Contato ag[MAX]; // Array estático
+    int tot = 0, op, id, pos;
 
     do {
-        printf("\n===== AGENDA =====\n");
-        printf("1 - Cadastrar contato\n");
-        printf("2 - Listar contatos\n");
-        printf("3 - Buscar contato por ID\n");
-        printf("4 - Atualizar telefone\n");
-        printf("5 - Remover contato\n");
-        printf("0 - Sair\n");
-        printf("Opcao: ");
-        scanf("%d", &opcao);
+        printf("\n1-Add 2-Listar 3-Buscar 4-Edit Fone 5-Remover 0-Sair\nOpcao: ");
+        scanf("%d", &op);
         getchar(); // Limpa o buffer do teclado
 
-        switch (opcao) {
-            case 1:
-                cadastrarContato(agenda, &contador);
-                break;
-            case 2:
-                listarContatos(agenda, contador);
-                break;
-            case 3:
-                buscarContatoPorId(agenda, contador);
-                break;
-            case 4:
-                atualizarTelefone(agenda, contador);
-                break;
-            case 5:
-                removerContato(agenda, contador);
-                break;
-            case 0:
-                printf("Encerrando o programa...\n");
-                break;
-            default:
-                printf("Opcao invalida! Tente novamente.\n");
+        if(op == 1) cadastrar(ag, &tot); // Cadastro passando ponteiro (*tot)
+        
+        else if(op == 2) {
+            printf("\n--- CONTATOS ATIVOS ---\n");
+            for(int i = 0; i < tot; i++)
+                if(ag[i].status != INATIVO) 
+                    printf("ID: %d | %s | %s\n", ag[i].id, ag[i].nome, ag[i].telefone);
         }
-    } while (opcao != 0);
-
+        
+        else if(op == 3 || op == 4 || op == 5) {
+            printf("ID do Contato: "); scanf("%d", &id); getchar();
+            pos = -1;
+            // Busca por ID integrada e direta
+            for(int i = 0; i < tot; i++) {
+                if(ag[i].id == id && ag[i].status != INATIVO) { pos = i; break; }
+            }
+            
+            if(pos == -1) {
+                printf("Nao encontrado.\n");
+            } else {
+                if(op == 3) printf("Nome: %s | Rua: %s, %d\n", ag[pos].nome, ag[pos].end.rua, ag[pos].end.numero);
+                else if(op == 4) { lerTxt("Novo Fone: ", ag[pos].telefone, 20); printf("Atualizado!\n"); }
+                else if(op == 5) { ag[pos].status = INATIVO; printf("Removido logicamente!\n"); }
+            }
+        }
+    } while(op != 0);
     return 0;
 }
 
-// --- Implementação das Funções ---
+// --- IMPLEMENTAÇÃO DAS FUNÇÕES ---
 
-void cadastrarContato(Contato agenda[], int *contador) {
-    if (*contador >= MAX_CONTATOS) {
-        printf("Agenda cheia! Nao e possivel cadastrar mais contatos.\n");
-        return;
-    }
+void lerTxt(char *msg, char *v, int t) {
+    printf("%s", msg);
+    fgets(v, t, stdin);
+    v[strcspn(v, "\n")] = '\0'; // Remove o ENTER
+}
 
-    int pos = *contador;
-    agenda[pos].id = pos + 1; // ID gerado automaticamente com base na posição
-    agenda[pos].status = NORMAL; // Definido como normal por padrão
+void cadastrar(Contato ag[], int *tot) {
+    if (*tot >= MAX) return;
+    Contato c;
+    c.id = *tot + 1; 
+    c.status = NORMAL;
 
-    printf("\n--- Cadastrar Contato (ID: %d) ---\n", agenda[pos].id);
-    
-    printf("Nome: ");
-    fgets(agenda[pos].nome, sizeof(agenda[pos].nome), stdin);
-    strtok(agenda[pos].nome, "\n"); // Remove o \n do final
+    printf("\n--- NOVO CONTATO (ID: %d) ---\n", c.id);
+    lerTxt("Nome: ", c.nome, 50);
+    lerTxt("Telefone: ", c.telefone, 20);
+    lerTxt("Rua: ", c.end.rua, 50);
+    printf("Numero: "); scanf("%d", &c.end.numero); getchar();
 
-    printf("Telefone: ");
-    fgets(agenda[pos].telefone, sizeof(agenda[pos].telefone), stdin);
-    strtok(agenda[pos].telefone, "\n");
-
-    printf("E-mail: ");
-    fgets(agenda[pos].email, sizeof(agenda[pos].email), stdin);
-    strtok(agenda[pos].email, "\n");
-
-    printf("\n--- Endereco ---\n");
-    printf("Rua: ");
-    fgets(agenda[pos].endereco.rua, sizeof(agenda[pos].endereco.rua), stdin);
-    strtok(agenda[pos].endereco.rua, "\n");
-
-    printf("Numero: ");
-    scanf("%d", &agenda[pos].endereco.numero);
-    getchar(); // Limpa o buffer
-
-    printf("Bairro: ");
-    fgets(agenda[pos].endereco.bairro, sizeof(agenda[pos].endereco.bairro), stdin);
-    strtok(agenda[pos].endereco.bairro, "\n");
-
-    printf("Cidade: ");
-    fgets(agenda[pos].endereco.cidade, sizeof(agenda[pos].endereco.cidade), stdin);
-    strtok(agenda[pos].endereco.cidade, "\n");
-
-    (*contador)++;
+    ag[(*tot)++] = c; // Insere e incrementa o total via ponteiro
     printf("Contato cadastrado com sucesso!\n");
 }
-
-void listarContatos(Contato agenda[], int contador) {
-    printf("\n--- Lista de Contatos ---\n");
-    int encontrou = 0;
-
-    for (int i = 0; i < contador; i++) {
-        if (agenda[i].status != INATIVO) {
-            printf("ID: %d | Nome: %s | Telefone: %s\n", agenda[i].id, agenda[i].nome, agenda[i].telefone);
-            encontrou = 1;
-        }
-    }
-
-    if (!encontrou) {
-        printf("Nenhum contato cadastrado ou ativo na agenda.\n");
-    }
-}
-
-void buscarContatoPorId(Contato agenda[], int contador) {
-    int idBusca;
-    printf("\nDigite o ID do contato que deseja buscar: ");
-    scanf("%d", &idBusca);
-
-    int encontrou = 0;
-
-    for (int i = 0; i < contador; i++) {
-        if (agenda[i].id == idBusca && agenda[i].status != INATIVO) {
-            printf("\n--- Dados do Contato ---\n");
-            printf("ID: %d\n", agenda[i].id);
-            printf("Nome: %s\n", agenda[i].nome);
-            printf("Telefone: %s\n", agenda[i].email);
-            printf("E-mail: %s\n", agenda[i].email);
-            printf("Endereco: %s, %d - %s (%s)\n", 
-                   agenda[i].endereco.rua, agenda[i].endereco.numero, 
-                   agenda[i].endereco.bairro, agenda[i].endereco.cidade);
-            printf("-------------------------\n");
-            encontrou = 1;
-            break;
-        }
-    }
-
-    if (!encontrou) {
-        printf("Contato com ID %d nao encontrado ou inativo.\n", idBusca);
-    }
-}
-
-void atualizarTelefone(Contato agenda[], int contador) {
-    int idBusca;
-    printf("\nDigite o ID do contato que deseja atualizar o telefone: ");
-    scanf("%d", &idBusca);
-    getchar(); // Limpa o buffer
-
-    int encontrou = 0;
-
-    for (int i = 0; i < contador; i++) {
-        if (agenda[i].id == idBusca && agenda[i].status != INATIVO) {
-            printf("Novo telefone para %s: ", agenda[i].nome);
-            fgets(agenda[i].telefone, sizeof(agenda[i].telefone), stdin);
-            strtok(agenda[i].telefone, "\n");
-            
-            printf("Telefone atualizado com sucesso!\n");
-            encontrou = 1;
-            break;
-        }
-    }
-
-    if (!encontrou) {
-        printf("Contato com ID %d nao encontrado.\n", idBusca);
-    }
-}
-
-void removerContato(Contato agenda[], int contador) {
-    int idBusca;
-    printf("\nDigite o ID do contato que deseja remover: ");
-    scanf("%d", &idBusca);
-
-    int encontrou = 0;
-
-    for (int i = 0; i < contador; i++) {
-        if (agenda[i].id == idBusca && agenda[i].status != INATIVO) {
-            agenda[i].status = INATIVO; // Remoção lógica
-            printf("Contato removido logicamente com sucesso!\n");
-            encontrou = 1;
-            break;
-        }
-    }
-
-    if (!encontrou) {
-        printf("Contato com ID %d nao encontrado ou ja inativo.\n", idBusca);
-    }
-} 
