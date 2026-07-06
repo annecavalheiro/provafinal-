@@ -1,215 +1,115 @@
-//biblioteca.arquivo 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum { FICCAO = 1, CIENCIA, HISTORIA } Categoria;
+typedef enum { DISPONIVEL = 1, EMPRESTADO } Situacao;
+
+typedef struct {
+    char nome[50];
+    int nascimento;
+} Autor;
+
 typedef struct {
     int id;
-    char titulo[50];
-    char autor[50];
-    int quantidade;
+    char titulo[100];
+    Autor autor; // Aninhada
+    char isbn[20];
+    int ano;
+    Categoria categoria;
+    Situacao situacao;
+    int ativo; // Remocao logica
 } Livro;
 
-Livro *biblioteca = NULL;
-int total = 0;
+Livro *bib = NULL;
+int total = 0, proxId = 1;
 
-int buscarPorId(int id) {
-    for(int i = 0; i < total; i++) {
-        if(biblioteca[i].id == id)
-            return i;
-    }
+int buscar(int id) {
+    for(int i = 0; i < total; i++)
+        if(bib[i].id == id && bib[i].ativo) return i;
     return -1;
 }
 
-void salvarArquivo() {
-
-    FILE *arq = fopen("livros.txt", "w");
-
-    if(arq == NULL) {
-        printf("Erro ao abrir arquivo.\n");
-        return;
-    }
-
-    fprintf(arq, "%d\n", total);
-
+void salvar() {
+    FILE *f = fopen("livros.txt", "w");
+    if(!f) return;
+    fprintf(f, "%d;%d\n", total, proxId);
     for(int i = 0; i < total; i++) {
-        fprintf(arq,"%d;%s;%s;%d\n",
-                biblioteca[i].id,
-                biblioteca[i].titulo,
-                biblioteca[i].autor,
-                biblioteca[i].quantidade);
+        fprintf(f, "%d;%s;%s;%d;%s;%d;%d;%d;%d\n", bib[i].id, bib[i].titulo, 
+                bib[i].autor.nome, bib[i].autor.nascimento, bib[i].isbn, 
+                bib[i].ano, bib[i].categoria, bib[i].situacao, bib[i].ativo);
     }
-
-    fclose(arq);
+    fclose(f);
 }
 
-void carregarArquivo() {
-
-    FILE *arq = fopen("livros.txt", "r");
-
-    if(arq == NULL)
-        return;
-
-    fscanf(arq, "%d\n", &total);
-
-    biblioteca = malloc(total * sizeof(Livro));
-
+void carregar() {
+    FILE *f = fopen("livros.txt", "r");
+    if(!f) return;
+    fscanf(f, "%d;%d\n", &total, &proxId);
+    bib = malloc(total * sizeof(Livro));
     for(int i = 0; i < total; i++) {
-        fscanf(arq,"%d;%49[^;];%49[^;];%d\n",
-               &biblioteca[i].id,
-               biblioteca[i].titulo,
-               biblioteca[i].autor,
-               &biblioteca[i].quantidade);
+        int c, s;
+        fscanf(f, "%d;%99[^;];%49[^;];%d;%19[^;];%d;%d;%d;%d\n", &bib[i].id, 
+               bib[i].titulo, bib[i].autor.nome, &bib[i].autor.nascimento, 
+               bib[i].isbn, &bib[i].ano, &c, &s, &bib[i].ativo);
+        bib[i].categoria = (Categoria)c; bib[i].situacao = (Situacao)s;
     }
-
-    fclose(arq);
+    fclose(f);
 }
 
-void adicionarLivro() {
+void lerString(char *msg, char *v, int tam) {
+    printf("%s", msg);
+    fgets(v, tam, stdin);
+    v[strcspn(v, "\n")] = '\0';
+}
 
-    Livro *temp = realloc(biblioteca,
-                         (total + 1) * sizeof(Livro));
+void adicionar() {
+    bib = realloc(bib, (total + 1) * sizeof(Livro));
+    bib[total].id = proxId++;
+    bib[total].ativo = 1;
+    bib[total].situacao = DISPONIVEL;
 
-    if(temp == NULL) {
-        printf("Erro de memoria.\n");
-        return;
-    }
-
-    biblioteca = temp;
-
-    printf("ID: ");
-    scanf("%d", &biblioteca[total].id);
-
-    getchar();
-
-    printf("Titulo: ");
-    fgets(biblioteca[total].titulo,50,stdin);
-    biblioteca[total].titulo[
-        strcspn(biblioteca[total].titulo,"\n")] = '\0';
-
-    printf("Autor: ");
-    fgets(biblioteca[total].autor,50,stdin);
-    biblioteca[total].autor[
-        strcspn(biblioteca[total].autor,"\n")] = '\0';
-
-    printf("Quantidade: ");
-    scanf("%d",&biblioteca[total].quantidade);
+    getchar(); // Limpa buffer
+    lerString("Titulo: ", bib[total].titulo, 100);
+    lerString("ISBN: ", bib[total].isbn, 20);
+    printf("Ano: "); scanf("%d", &bib[total].ano); getchar();
+    lerString("Autor: ", bib[total].autor.nome, 50);
+    printf("Nasc. Autor: "); scanf("%d", &bib[total].autor.nascimento);
+    printf("1-Ficcao 2-Ciencia 3-Historia: "); scanf("%d", (int*)&bib[total].categoria);
 
     total++;
-
-    salvarArquivo();
-
-    printf("Livro cadastrado!\n");
+    salvar();
+    printf("Cadastrado!\n");
 }
 
-void removerLivro() {
-
-    int id;
-
-    printf("ID para remover: ");
-    scanf("%d",&id);
-
-    int pos = buscarPorId(id);
-
-    if(pos == -1) {
-        printf("Livro nao encontrado.\n");
-        return;
-    }
-
-    for(int i = pos; i < total - 1; i++) {
-        biblioteca[i] = biblioteca[i + 1];
-    }
-
-    total--;
-
-    biblioteca = realloc(biblioteca,
-                        total * sizeof(Livro));
-
-    salvarArquivo();
-
-    printf("Livro removido.\n");
-}
-
-void listarLivros() {
-
-    printf("\n===== LIVROS =====\n");
-
+void listar() {
     for(int i = 0; i < total; i++) {
-
-        printf("\nID: %d\n", biblioteca[i].id);
-        printf("Titulo: %s\n", biblioteca[i].titulo);
-        printf("Autor: %s\n", biblioteca[i].autor);
-        printf("Quantidade: %d\n",
-               biblioteca[i].quantidade);
+        if(bib[i].ativo)
+            printf("\nID: %d | %s | %s | Ano: %d\n", bib[i].id, bib[i].titulo, bib[i].autor.nome, bib[i].ano);
     }
 }
 
 int main() {
-
     int op, id, pos;
-
-    carregarArquivo();
-
+    carregar();
     do {
-
-        printf("\n=== BIBLIOTECA ===\n");
-        printf("1 - Adicionar livro\n");
-        printf("2 - Buscar livro\n");
-        printf("3 - Remover livro\n");
-        printf("4 - Listar livros\n");
-        printf("0 - Sair\n");
-        printf("Opcao: ");
-        scanf("%d",&op);
-
-        switch(op) {
-
-            case 1:
-                adicionarLivro();
-                break;
-
-            case 2:
-
-                printf("ID: ");
-                scanf("%d",&id);
-
-                pos = buscarPorId(id);
-
-                if(pos == -1) {
-                    printf("Livro nao encontrado.\n");
-                } else {
-
-                    printf("\nTitulo: %s\n",
-                           biblioteca[pos].titulo);
-
-                    printf("Autor: %s\n",
-                           biblioteca[pos].autor);
-
-                    printf("Quantidade: %d\n",
-                           biblioteca[pos].quantidade);
-                }
-
-                break;
-
-            case 3:
-                removerLivro();
-                break;
-
-            case 4:
-                listarLivros();
-                break;
-
-            case 0:
-                salvarArquivo();
-                free(biblioteca);
-                printf("Encerrando...\n");
-                break;
-
-            default:
-                printf("Opcao invalida.\n");
+        printf("\n1-Add 2-Listar 3-Buscar 4-Edit Titulo 5-Remover 0-Sair\nOpcao: ");
+        scanf("%d", &op);
+        if(op == 1) adicionar();
+        if(op == 2) listar();
+        if(op == 3 || op == 4 || op == 5) {
+            printf("ID: "); scanf("%d", &id);
+            pos = buscar(id);
+            if(pos == -1) printf("Nao encontrado.\n");
+            else if(op == 3) printf("Livro: %s - Autor: %s\n", bib[pos].titulo, bib[pos].autor.nome);
+            else if(op == 4) { getchar(); lerString("Novo Titulo: ", bib[pos].titulo, 100); salvar(); }
+            else if(op == 5) { bib[pos].ativo = 0; salvar(); printf("Removido!\n"); }
         }
-
     } while(op != 0);
+    free(bib);
+    return 0;
+}
+
 
     return 0;
 }
