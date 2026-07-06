@@ -1,123 +1,123 @@
 //Sistema de Cadastro de Livros
-//Desenvolva um programa em linguagem C para gerenciar o cadastro de livros de uma biblioteca.
-//O programa deverá utilizar obrigatoriamente:
-//typedef struct typedef enum Struct aninhada Arrays estáticos Funções
-//Ponteiros nos parâmetros de cadastro Busca por ID
-//O sistema deve permitir:
-//Cadastrar livros. Listar todos os livros. Buscar um livro pelo ID.
-//Atualizar o título de um livro. Remover logicamente um livro. Encerrar o programa.
-//Utilize as seguintes estruturas:
-//DadosAutor Livro
-//Cada livro deverá possuir:
-//ID  Título ISBN Ano
-//Dados do autor Categoria Situação
-//Campo ativo para remoção lógica.
 
 #include <stdio.h>
 #include <string.h>
 
 #define MAX 100
+// 1. Enums obrigatorios
 typedef enum { FICCAO = 1, CIENCIA, HISTORIA } Categoria;
 typedef enum { DISPONIVEL = 1, EMPRESTADO } Situacao;
+// 2. Struct DadosAutor obrigatoria
 typedef struct {
-    char nome[50];       // Garantindo o tamanho correto das strings
+    char nome[50];
     int nascimento;
-} Autor;
+} DadosAutor;
+// 3. Struct Livro aninhada com todos os campos
 typedef struct {
     int id;
-    char titulo[100];    // Garantindo o tamanho correto das strings
-    Autor autor;         // Struct aninhada obrigatória
-    char isbn[20];       // Garantindo o tamanho correto das strings
+    char titulo[100];
+    char isbn[20];
     int ano;
+    DadosAutor autor; // Aninhamento aqui
     Categoria categoria;
     Situacao situacao;
-    int ativo;           // Campo para remoção lógica
+    int ativo; // Remocao logica
 } Livro;
-void lerTxt(const char *msg, char *v, int t) {
-    printf("%s", msg);
-    fgets(v, t, stdin);
-    v[strcspn(v, "\n")] = '\0';
-}
+// 4. Busca por ID simples
 int buscarId(Livro livros[], int total, int id) {
-    for(int i = 0; i < total; i++)
-        if(livros[i].id == id && livros[i].ativo) return i;
-    return -1;
+    for (int i = 0; i < total; i++) {
+        if (livros[i].id == id && livros[i].ativo == 1) {
+            return i; // Retorna a posicao se achar e estiver ativo
+        }
+    }
+    return -1; // Nao encontrou
 }
-// Parâmetros por ponteiro (*total e *id) conforme exigido
+// 5. Cadastro obrigatorio usando ponteiros (*total e *id)
 void cadastrar(Livro livros[], int *total, int *id) {
     if (*total >= MAX) {
-        printf("\n[ERRO] Limite de armazenamento atingido!\n");
+        printf("Limite atingido!\n");
         return;
     }
-    Livro n;
-    n.id = *id; n.ativo = 1; n.situacao = DISPONIVEL;
 
-    printf("\n--- NOVO CADASTRO (ID: %d) ---\n", n.id);
-    getchar(); // Limpa o buffer antes de ler texto
-    lerTxt("Titulo: ", n.titulo, 100);
-    lerTxt("ISBN: ", n.isbn, 20);
-    printf("Ano de Publicacao: "); scanf("%d", &n.ano); getchar();
-    lerTxt("Nome do Autor: ", n.autor.nome, 50);
-    printf("Ano de Nasc. Autor: "); scanf("%d", &n.autor.nascimento);
-    
-    printf("Categoria (1-Ficcao, 2-Ciencia, 3-Historia): "); 
+    Livro n;
+    n.id = *id;
+    n.ativo = 1;
+    n.situacao = DISPONIVEL;
+
+    getchar(); // Limpa o buffer do teclado
+    printf("Titulo: ");
+    fgets(n.titulo, 100, stdin);
+    n.titulo[strcspn(n.titulo, "\n")] = '\0'; // Remove o ENTER
+
+    printf("ISBN: ");
+    fgets(n.isbn, 20, stdin);
+    n.isbn[strcspn(n.isbn, "\n")] = '\0';
+
+    printf("Ano: ");
+    scanf("%d", &n.ano);
+    getchar(); // Limpa o ENTER antes do proximo texto
+
+    printf("Nome do Autor: ");
+    fgets(n.autor.nome, 50, stdin);
+    n.autor.nome[strcspn(n.autor.nome, "\n")] = '\0';
+
+    printf("Ano de Nasc. Autor: ");
+    scanf("%d", &n.autor.nascimento);
+
+    printf("Categoria (1-Ficcao, 2-Ciencia, 3-Historia): ");
     scanf("%d", (int*)&n.categoria);
 
-    livros[(*total)++] = n;
-    (*id)++;
-    printf("\n[SUCESSO] Livro cadastrado com sucesso!\n");
+    livros[*total] = n; // Salva no array estatico
+    (*total)++;         // Aumenta o total usando ponteiro
+    (*id)++;            // Aumenta o proximo ID usando ponteiro
+
+    printf("Livro cadastrado!\n");
 }
 
 int main() {
-    Livro livros[MAX]; // Array estático
+    Livro livros[MAX]; // Arrays estáticos obrigatorios
     int total = 0, proximoId = 1, op, id, pos;
+
     do {
-        printf("\n MENU BIBLIOTECA \n");
-        printf("1 - Cadastrar Livro\n");
-        printf("2 - Listar Livros\n");
-        printf("3 - Buscar por ID\n");
-        printf("4 - Atualizar Titulo\n");
-        printf("5 - Remover (Logica)\n");
-        printf("0 - Sair\n");
-        printf("Escolha uma opcao: ");
+        printf("\n--- MENU ---\n1-Cadastrar\n2-Listar\n3-Buscar\n4-Editar Titulo\n5-Remover\n0-Sair\nOpcao: ");
         scanf("%d", &op);
-        
-        if(op == 1) cadastrar(livros, &total, &proximoId);
-        if(op == 2) {
-            printf("\n=== LIVROS ATIVOS NO SISTEMA ===\n");
-            int enc = 0;
-            for(int i = 0; i < total; i++) {
-                if(livros[i].ativo) {
-                    printf("ID: %d | Título: %s | Autor: %s (Ano: %d)\n", 
-                           livros[i].id, livros[i].titulo, livros[i].autor.nome, livros[i].ano);
-                    enc++;
+
+        if (op == 1) {
+            cadastrar(livros, &total, &proximoId);
+        }
+        else if (op == 2) {
+            printf("\n--- LIVROS ATIVOS ---\n");
+            for (int i = 0; i < total; i++) {
+                if (livros[i].ativo == 1) {
+                    printf("ID: %d | Titulo: %s | Autor: %s\n", livros[i].id, livros[i].titulo, livros[i].autor.nome);
                 }
             }
-            if(enc == 0) printf("Nenhum livro cadastrado ou ativo.\n");
         }
-        if(op == 3 || op == 4 || op == 5) {
-            printf("\nDigite o ID do Livro: "); scanf("%d", &id);
-            pos = buscarId(livros, total, id); 
-            if(pos == -1) {
-                printf("\n[ERRO] Livro nao encontrado ou inativo.\n");
+        else if (op == 3 || op == 4 || op == 5) {
+            printf("Digite o ID: ");
+            scanf("%d", &id);
+            pos = buscarId(livros, total, id);
+
+            if (pos == -1) {
+                printf("Livro nao encontrado!\n");
             } else {
-                if(op == 3) {
-                    printf("\n--- DADOS DO LIVRO ---\n");
-                    printf("ID: %d\nTitulo: %s\nAutor: %s\nAno: %d\n", 
-                           livros[pos].id, livros[pos].titulo, livros[pos].autor.nome, livros[pos].ano);
+                if (op == 3) {
+                    printf("Titulo: %s\nISBN: %s\nAno: %d\n", livros[pos].titulo, livros[pos].isbn, livros[pos].ano);
                 }
-                else if(op == 4) { 
-                    getchar(); 
-                    lerTxt("Digite o Novo Titulo: ", livros[pos].titulo, 100); 
-                    printf("\n[SUCESSO] Titulo atualizado!\n"); 
+                else if (op == 4) {
+                    getchar(); // Limpa o buffer
+                    printf("Novo Titulo: ");
+                    fgets(livros[pos].titulo, 100, stdin);
+                    livros[pos].titulo[strcspn(livros[pos].titulo, "\n")] = '\0';
+                    printf("Titulo atualizado!\n");
                 }
-                else if(op == 5) { 
-                    livros[pos].ativo = 0; 
-                    printf("\n[SUCESSO] Livro removido logicamente!\n"); 
+                else if (op == 5) {
+                    livros[pos].ativo = 0; // Remocao logica feita aqui
+                    printf("Livro removido!\n");
                 }
             }
         }
-    } while(op != 0);   
-    printf("\nPrograma encerrado.\n");
+    } while (op != 0); // Encerrar o programa
+
     return 0;
 }
