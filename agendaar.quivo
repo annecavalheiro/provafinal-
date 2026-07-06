@@ -1,0 +1,120 @@
+//ageda com arquivo 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef enum { INATIVO = 0, NORMAL, FAVORITO, BLOQUEADO } Status;
+
+typedef struct {
+    char rua;
+    int numero;
+} Endereco;
+
+typedef struct {
+    int id;
+    char nome;
+    char telefone;
+    Endereco end; // Struct aninhada
+    Status status;
+} Contato;
+
+// --- PROTÓTIPOS OBRIGATÓRIOS ---
+void lerTxt(char *msg, char *v, int t);
+void salvar();
+void carregar();
+void cadastrar();
+
+// Ponteiro global e contadores para facilitar a prova escrita
+Contato *ag = NULL;
+int tot = 0, proxId = 1;
+
+int main() {
+    int op, id, pos;
+    
+    carregar(); // Carrega os dados assim que o programa inicia
+
+    do {
+        printf("\n1-Add 2-Listar 3-Buscar 4-Edit Fone 5-Remover 0-Sair\nOpcao: ");
+        scanf("%d", &op);
+        getchar(); // Limpa o buffer do teclado
+
+        if(op == 1) cadastrar();
+        
+        else if(op == 2) {
+            printf("\n--- CONTATOS ATIVOS ---\n");
+            for(int i = 0; i < tot; i++)
+                if(ag[i].status != INATIVO) 
+                    printf("ID: %d | %s | %s\n", ag[i].id, ag[i].nome, ag[i].telefone);
+        }
+        
+        else if(op == 3 || op == 4 || op == 5) {
+            printf("ID do Contato: "); scanf("%d", &id); getchar();
+            pos = -1;
+            for(int i = 0; i < tot; i++) {
+                if(ag[i].id == id && ag[i].status != INATIVO) { pos = i; break; }
+            }
+            
+            if(pos == -1) {
+                printf("Nao encontrado.\n");
+            } else {
+                if(op == 3) printf("Nome: %s | Fone: %s | Rua: %s, %d\n", ag[pos].nome, ag[pos].telefone, ag[pos].end.rua, ag[pos].end.numero);
+                else if(op == 4) { lerTxt("Novo Fone: ", ag[pos].telefone, 20); salvar(); printf("Atualizado!\n"); }
+                else if(op == 5) { ag[pos].status = INATIVO; salvar(); printf("Removido logicamente!\n"); }
+            }
+        }
+    } while(op != 0);
+
+    free(ag); // Libera a memoria alocada antes de fechar
+    return 0;
+}
+
+// --- IMPLEMENTAÇÃO RE DUZIDA DAS FUNÇÕES ---
+
+void lerTxt(char *msg, char *v, int t) {
+    printf("%s", msg);
+    fgets(v, t, stdin);
+    v[strcspn(v, "\n")] = '\0';
+}
+
+void salvar() {
+    FILE *f = fopen("agenda.txt", "w");
+    if(!f) return;
+    fprintf(f, "%d;%d\n", tot, proxId); // Salva os metadados na linha 1
+    for(int i = 0; i < tot; i++) {
+        fprintf(f, "%d;%s;%s;%s;%d;%d\n", ag[i].id, ag[i].nome, ag[i].telefone, 
+                ag[i].end.rua, ag[i].end.numero, ag[i].status);
+    }
+    fclose(f);
+}
+
+void carregar() {
+    FILE *f = fopen("agenda.txt", "r");
+    if(!f) return;
+    fscanf(f, "%d;%d\n", &tot, &proxId);
+    ag = malloc(tot * sizeof(Contato)); // Aloca o tamanho exato salvo
+    for(int i = 0; i < tot; i++) {
+        int st;
+        // %49[^;] le o texto ate achar o ponto e virgula (trata espacos em branco)
+        fscanf(f, "%d;%49[^;];%19[^;];%49[^;];%d;%d\n", &ag[i].id, ag[i].nome, 
+               ag[i].telefone, ag[i].end.rua, &ag[i].end.numero, &st);
+        ag[i].status = (Status)st;
+    }
+    fclose(f);
+}
+
+void cadastrar() {
+    // realloc aumenta o bloco dinamico para caber mais um contato
+    ag = realloc(ag, (tot + 1) * sizeof(Contato));
+    ag[tot].id = proxId++;
+    ag[tot].status = NORMAL;
+
+    printf("\n--- NOVO CONTATO (ID: %d) ---\n", ag[tot].id);
+    lerTxt("Nome: ", ag[tot].nome, 50);
+    lerTxt("Telefone: ", ag[tot].telefone, 20);
+    lerTxt("Rua: ", ag[tot].end.rua, 50);
+    printf("Numero: "); scanf("%d", &ag[tot].end.numero); getchar();
+
+    tot++;
+    salvar(); // Grava no arquivo texto imediatamente
+    printf("Contato salvo com sucesso!\n");
+}
