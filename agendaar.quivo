@@ -1,5 +1,3 @@
-//ageda com arquivo 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,15 +5,15 @@
 typedef enum { INATIVO = 0, NORMAL, FAVORITO, BLOQUEADO } Status;
 
 typedef struct {
-    char rua;
+    char rua[50]; // CORRIGIDO: de char para vetor
     int numero;
 } Endereco;
 
 typedef struct {
     int id;
-    char nome;
-    char telefone;
-    Endereco end; // Struct aninhada
+    char nome[50];     // CORRIGIDO: de char para vetor
+    char telefone[20]; // CORRIGIDO: de char para vetor
+    Endereco end; 
     Status status;
 } Contato;
 
@@ -25,7 +23,7 @@ void salvar();
 void carregar();
 void cadastrar();
 
-// Ponteiro global e contadores para facilitar a prova escrita
+// Ponteiro global e contadores
 Contato *ag = NULL;
 int tot = 0, proxId = 1;
 
@@ -36,7 +34,7 @@ int main() {
 
     do {
         printf("\n1-Add 2-Listar 3-Buscar 4-Edit Fone 5-Remover 0-Sair\nOpcao: ");
-        scanf("%d", &op);
+        if (scanf("%d", &op) != 1) op = -1;
         getchar(); // Limpa o buffer do teclado
 
         if(op == 1) cadastrar();
@@ -69,7 +67,7 @@ int main() {
     return 0;
 }
 
-// --- IMPLEMENTAÇÃO RE DUZIDA DAS FUNÇÕES ---
+// --- IMPLEMENTAÇÃO ---
 
 void lerTxt(char *msg, char *v, int t) {
     printf("%s", msg);
@@ -80,7 +78,7 @@ void lerTxt(char *msg, char *v, int t) {
 void salvar() {
     FILE *f = fopen("agenda.txt", "w");
     if(!f) return;
-    fprintf(f, "%d;%d\n", tot, proxId); // Salva os metadados na linha 1
+    fprintf(f, "%d;%d\n", tot, proxId); 
     for(int i = 0; i < tot; i++) {
         fprintf(f, "%d;%s;%s;%s;%d;%d\n", ag[i].id, ag[i].nome, ag[i].telefone, 
                 ag[i].end.rua, ag[i].end.numero, ag[i].status);
@@ -91,11 +89,14 @@ void salvar() {
 void carregar() {
     FILE *f = fopen("agenda.txt", "r");
     if(!f) return;
-    fscanf(f, "%d;%d\n", &tot, &proxId);
-    ag = malloc(tot * sizeof(Contato)); // Aloca o tamanho exato salvo
+    if (fscanf(f, "%d;%d\n", &tot, &proxId) != 2) { fclose(f); return; }
+    
+    ag = malloc(tot * sizeof(Contato)); 
+    if(!ag && tot > 0) { fclose(f); return; }
+
     for(int i = 0; i < tot; i++) {
         int st;
-        // %49[^;] le o texto ate achar o ponto e virgula (trata espacos em branco)
+        // %49[^;] lê até 49 caracteres ou encontrar ';'
         fscanf(f, "%d;%49[^;];%19[^;];%49[^;];%d;%d\n", &ag[i].id, ag[i].nome, 
                ag[i].telefone, ag[i].end.rua, &ag[i].end.numero, &st);
         ag[i].status = (Status)st;
@@ -104,8 +105,13 @@ void carregar() {
 }
 
 void cadastrar() {
-    // realloc aumenta o bloco dinamico para caber mais um contato
-    ag = realloc(ag, (tot + 1) * sizeof(Contato));
+    Contato *temp = realloc(ag, (tot + 1) * sizeof(Contato));
+    if (!temp) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+    ag = temp;
+
     ag[tot].id = proxId++;
     ag[tot].status = NORMAL;
 
@@ -116,6 +122,6 @@ void cadastrar() {
     printf("Numero: "); scanf("%d", &ag[tot].end.numero); getchar();
 
     tot++;
-    salvar(); // Grava no arquivo texto imediatamente
+    salvar(); 
     printf("Contato salvo com sucesso!\n");
 }
