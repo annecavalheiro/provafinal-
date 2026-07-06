@@ -18,6 +18,7 @@
 
 #define MAX 100
 
+// 1. Uso obrigatorio de typedef enum
 typedef enum {
     FICCAO = 1,
     CIENCIA,
@@ -29,29 +30,29 @@ typedef enum {
     EMPRESTADO
 } Situacao;
 
-// Struct para os Dados do Autor
+// 2. Uso obrigatorio de DadosAutor estruturado
 typedef struct {
-    char nome[50];       // CORRIGIDO: adicionado [50]
+    char nome[50];       // CORRIGIDO: tamanho da string restaurado
     int nascimento;
 } Autor;
 
-// Struct principal com aninhamento
+// 3. Uso obrigatorio de Struct aninhada (Autor dentro de Livro)
 typedef struct {
     int id;
-    char titulo[100];    // CORRIGIDO: adicionado [100]
-    Autor autor;         // Struct aninhada obrigatória
-    char isbn[20];       // CORRIGIDO: adicionado [20]
+    char titulo[100];    // CORRIGIDO: tamanho da string restaurado
+    Autor autor;         // Struct aninhada aqui
+    char isbn[20];       // CORRIGIDO: tamanho da string restaurado
     int ano;
     Categoria categoria;
     Situacao situacao;
-    int ativo;           // Campo obrigatório para remoção lógica
+    int ativo;           // Campo obrigatorio para remocao logica
 } Livro;
 
-// Funções de leitura segura
+// Funcoes auxiliares de leitura segura
 void lerTexto(const char msg[], char texto[], int tam) {
     printf("%s", msg);
     fgets(texto, tam, stdin);
-    texto[strcspn(texto, "\n")] = '\0';
+    texto[strcspn(texto, "\n")] = '\0'; // Remove o '\n' gerado pelo fgets
 }
 
 int lerInteiro(const char msg[]) {
@@ -59,12 +60,13 @@ int lerInteiro(const char msg[]) {
     printf("%s", msg);
     while (scanf("%d", &n) != 1) {
         printf("Entrada invalida. Digite um numero: ");
-        while (getchar() != '\n'); 
+        while (getchar() != '\n'); // Limpa o buffer em caso de digitação errada
     }
-    getchar(); 
+    getchar(); // Limpa o '\n' restante no buffer
     return n;
 }
 
+// Conversores de Enum para Texto na listagem
 const char* obterCategoriaTexto(Categoria cat) {
     switch (cat) {
         case FICCAO: return "Ficcao";
@@ -82,26 +84,27 @@ const char* obterSituacaoTexto(Situacao sit) {
     }
 }
 
-// Mecanismo de busca exigido
+// 4. Mecanismo de Busca por ID exigido no enunciado
 int buscarId(Livro livros[], int total, int id) {
     for (int i = 0; i < total; i++) {
+        // Verifica se o ID bate E se o livro nao foi excluido logicamente
         if (livros[i].id == id && livros[i].ativo) {
-            return i;
+            return i; // Retorna a posicao no array
         }
     }
-    return -1;
+    return -1; // Retorna -1 se nao encontrar
 }
 
-// Cadastro usando ponteiros nos parametros (*total e *id)
+// 5. Uso obrigatorio de Ponteiros nos parametros de cadastro (*total e *id)
 void cadastrar(Livro livros[], int *total, int *id) {
     if (*total >= MAX) {
-        printf("\n[ERRO] Limite atingido.\n");
+        printf("\n[ERRO] Limite de armazenamento atingido.\n");
         return;
     }
 
     Livro novo;
     novo.id = *id;
-    novo.ativo = 1;
+    novo.ativo = 1; // Ativa o registro do livro
     novo.situacao = DISPONIVEL;
 
     printf("\n--- Cadastrar Livro (ID: %d) ---\n", novo.id);
@@ -113,12 +116,15 @@ void cadastrar(Livro livros[], int *total, int *id) {
 
     int opCat;
     do {
-        printf("1-Ficcao\n2-Ciencia\n3-Historia\n");
-        opCat = lerInteiro("Categoria: ");
+        printf("Escolha a Categoria:\n1-Ficcao\n2-Ciencia\n3-Historia\n");
+        opCat = lerInteiro("Opcao: ");
     } while (opCat < 1 || opCat > 3);
     novo.categoria = (Categoria)opCat;
 
+    // Salva o novo livro no array estatico
     livros[*total] = novo;
+    
+    // Modifica as variaveis da main usando os ponteiros recebidos
     (*total)++;
     (*id)++;
 
@@ -135,19 +141,22 @@ void exibirLivro(Livro l) {
     printf("\nSituacao: %s\n", obterSituacaoTexto(l.situacao));
 }
 
+// Funcao para listar todos os livros
 void listar(Livro livros[], int total) {
     int encontrados = 0;
+    printf("\n=== Lista de Livros Ativos ===");
     for (int i = 0; i < total; i++) {
-        if (livros[i].ativo) {
+        if (livros[i].ativo) { // Mostra apenas os que nao foram removidos logicamente
             exibirLivro(livros[i]);
             encontrados++;
         }
     }
     if (encontrados == 0) {
-        printf("\nNenhum livro cadastrado.\n");
+        printf("\nNenhum livro cadastrado ou ativo.\n");
     }
 }
 
+// Opcao do menu para Buscar por ID
 void buscarPorIdMenu(Livro livros[], int total) {
     int id = lerInteiro("ID para busca: ");
     int indice = buscarId(livros, total, id);
@@ -156,9 +165,11 @@ void buscarPorIdMenu(Livro livros[], int total) {
         printf("[ERRO] Livro nao encontrado ou removido.\n");
         return;
     }
+    printf("\n--- Livro Encontrado ---");
     exibirLivro(livros[indice]);
 }
 
+// Funcao para atualizar o titulo de um livro
 void atualizar(Livro livros[], int total) {
     int id = lerInteiro("ID para atualizar: ");
     int indice = buscarId(livros, total, id);
@@ -168,10 +179,12 @@ void atualizar(Livro livros[], int total) {
         return;
     }
 
+    printf("Titulo atual: %s\n", livros[indice].titulo);
     lerTexto("Novo titulo: ", livros[indice].titulo, 100);
-    printf("[SUCESSO] Atualizado.\n");
+    printf("[SUCESSO] Titulo atualizado.\n");
 }
 
+// Funcao para remocao logica
 void remover(Livro livros[], int total) {
     int id = lerInteiro("ID para remover: ");
     int indice = buscarId(livros, total, id);
@@ -181,24 +194,27 @@ void remover(Livro livros[], int total) {
         return;
     }
 
-    livros[indice].ativo = 0; // Remoção lógica realizada aqui
-    printf("[SUCESSO] Removido logicamente.\n");
+    // Remocao logica realizada mudando a flag ativo para 0
+    livros[indice].ativo = 0; 
+    printf("[SUCESSO] Livro removido logicamente do sistema.\n");
 }
 
 int main() {
+    // 6. Uso obrigatorio de Arrays estaticos
     Livro livros[MAX]; 
     int total = 0;
     int proximoId = 1;
     int op;
 
     do {
-        printf("\n===== MENU =====\n");
-        printf("1-Cadastrar\n");
-        printf("2-Listar\n");
-        printf("3-Buscar por ID\n");
-        printf("4-Atualizar Titulo\n");
-        printf("5-Remover\n");
-        printf("0-Sair\n");
+        printf("\n===== MENU BIBLIOTECA =====\n");
+        printf("1 - Cadastrar\n");
+        printf("2 - Listar Todos\n");
+        printf("3 - Buscar por ID\n");
+        printf("4 - Atualizar Titulo\n");
+        printf("5 - Remover (Logica)\n");
+        printf("0 - Sair\n");
+        printf("===========================\n");
 
         op = lerInteiro("Opcao: ");
 
@@ -208,10 +224,10 @@ int main() {
             case 3: buscarPorIdMenu(livros, total); break;
             case 4: atualizar(livros, total); break;
             case 5: remover(livros, total); break;
-            case 0: printf("Encerrando...\n"); break;
+            case 0: printf("Encerrando programa...\n"); break;
             default: printf("[ERRO] Opcao invalida.\n");
         }
-    } while (op != 0);
+    } while (op != 0); // Requisito: Encerrar o programa
 
     return 0;
 }
