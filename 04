@@ -1,0 +1,21 @@
+#include <stdio.h>
+
+int main() {
+    int i;
+    long long t1, t2, prox;
+
+    printf("Digite o 1o termo: ");
+    scanf("%lld", &t1);
+    printf("Digite o 2o termo: ");
+    scanf("%lld", &t2);
+
+    printf("%lld\n%lld\n", t1, t2);
+
+    for (i = 3; i <= 20; i++) {
+        prox = t1 + t2;
+        printf("%lld\n", prox);
+        t1 = t2;
+        t2 = prox;
+    }
+    return 0;
+}
