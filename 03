@@ -1,0 +1,21 @@
+#include <stdio.h>
+
+int main() {
+    int n, i;
+    long long t1 = 1, t2 = 1, prox;
+
+    printf("Quantos termos? ");
+    scanf("%d", &n);
+
+    if (n >= 1) printf("%lld ", t1);
+    if (n >= 2) printf("%lld ", t2);
+
+    for (i = 3; i <= n; i++) {
+        prox = t1 + t2;
+        printf("%lld ", prox);
+        t1 = t2;
+        t2 = prox;
+    }
+    printf("\n");
+    return 0;
+}
