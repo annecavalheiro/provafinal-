@@ -1,0 +1,24 @@
+#include <stdio.h>
+
+int main() {
+    int a, b, x, y, resto, mdc;
+    long int mmc;
+
+    printf("Digite dois numeros: ");
+    scanf("%d %d", &a, &b);
+
+    // Algoritmo de Euclides para achar o MDC
+    x = a;
+    y = b;
+    while (y != 0) {
+        resto = x % y;
+        x = y;
+        y = resto;
+    }
+    mdc = x;
+    mmc = (long int)a * b / mdc;
+
+    printf("MDC = %d\n", mdc);
+    printf("MMC = %ld\n", mmc);
+    return 0;
+}
