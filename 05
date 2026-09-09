@@ -1,0 +1,33 @@
+#include <stdio.h>
+
+int main() {
+    int dividendo, divisor;
+    int quociente = 0, resto;
+
+    printf("Digite o dividendo: ");
+    scanf("%d", &dividendo);
+    printf("Digite o divisor: ");
+    scanf("%d", &divisor);
+
+    if (divisor == 0) {
+        printf("Erro: divisao por zero!\n");
+        return 0;
+    }
+
+    // trabalha com valores positivos para simplificar
+    int sinal = 1;
+    if (dividendo < 0) { dividendo = -dividendo; sinal = -sinal; }
+    if (divisor < 0) { divisor = -divisor; sinal = -sinal; }
+
+    resto = dividendo;
+    while (resto >= divisor) {
+        resto = resto - divisor;
+        quociente++;
+    }
+
+    quociente = quociente * sinal;
+
+    printf("Quociente = %d\n", quociente);
+    printf("Resto = %d\n", resto);
+    return 0;
+}
