@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <math.h>
+
+// Protótipos das funções
+void exibirMenu();
+double calcularAreaCirculo(double raio);
+double calcularHipotenusa(double cateto1, double cateto2);
+double calcularPotencia(double base, double expoente);
+double converterGrausParaRadianos(double graus);
+double calcularSeno(double radianos);
+int lerOpcoes();
+
+int main() {
+    exibirMenu();
+    int op = lerOpcoes();
+
+    if (op == 1) {
+        double r;
+        printf("Raio: ");
+        scanf("%lf", &r);
+        printf("Area: %.2f\n", calcularAreaCirculo(r));
+    } else if (op == 2) {
+        double c1, c2;
+        printf("Catetos: ");
+        scanf("%lf %lf", &c1, &c2);
+        printf("Hipotenusa: %.2f\n", calcularHipotenusa(c1, c2));
+    } else if (op == 3) {
+        double b, exp;
+        printf("Base e expoente: ");
+        scanf("%lf %lf", &b, &exp);
+        printf("Potencia: %.2f\n", calcularPotencia(b, exp));
+    } else if (op == 4) {
+        double g;
+        printf("Graus: ");
+        scanf("%lf", &g);
+        printf("Radianos: %.4f\n", converterGrausParaRadianos(g));
+    } else if (op == 5) {
+        double rad;
+        printf("Radianos: ");
+        scanf("%lf", &rad);
+        printf("Seno: %.4f\n", calcularSeno(rad));
+    } else {
+        printf("Opcao invalida!\n");
+    }
+
+    return 0;
+}
+
+// Funções
+void exibirMenu() {
+    printf("1 - Area do Circulo\n");
+    printf("2 - Hipotenusa\n");
+    printf("3 - Potencia\n");
+    printf("4 - Converter Graus para Radianos\n");
+    printf("5 - Calcular Seno\n");
+}
+
+int lerOpcoes() {
+    int op;
+    printf("Escolha uma opcao: ");
+    scanf("%d", &op);
+    return op;
+}
+
+double calcularAreaCirculo(double raio) {
+    return 3.14159 * pow(raio, 2);
+}
+
+double calcularHipotenusa(double cateto1, double cateto2) {
+    return sqrt(pow(cateto1, 2) + pow(cateto2, 2));
+}
+
+double calcularPotencia(double base, double expoente) {
+    return pow(base, expoente);
+}
+
+double converterGrausParaRadianos(double graus) {
+    return graus * (3.14159 / 180.0);
+}
+
+double calcularSeno(double radianos) {
+    return sin(radianos);
+}
