@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <math.h>
+
+// Estrutura para permitir a sintaxe "math.pow" e "math.sqrt"
+struct {
+    double (*pow)(double, double);
+    double (*sqrt)(double);
+} math = {pow, sqrt};
+
+// Protótipo da função
+double calcularHipotenusa(double cateto1, double cateto2);
+
+int main() {
+    double c1, c2, hipotenusa;
+
+    printf("Digite o primeiro cateto: ");
+    scanf("%lf", &c1);
+
+    printf("Digite o segundo cateto: ");
+    scanf("%lf", &c2);
+
+    hipotenusa = calcularHipotenusa(c1, c2);
+
+    printf("A hipotenusa e: %.2f\n", hipotenusa);
+
+    return 0;
+}
+
+// Implementação utilizando a sintaxe math.
+double calcularHipotenusa(double cateto1, double cateto2) {
+    return math.sqrt(math.pow(cateto1, 2) + math.pow(cateto2, 2));
+}
