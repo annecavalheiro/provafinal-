@@ -1,0 +1,79 @@
+#include <stdio.h>
+
+// 1. Função recursiva para calcular a frequência de cada nota no vetor
+void calcula_frequencia_recursiva(int notas[], int n, int freq[]) {
+    // Caso base: se não houver mais notas para processar
+    if (n == 0) {
+        return;
+    }
+    
+    // Processa a nota atual (n - 1)
+    int nota_atual = notas[n - 1];
+    if (nota_atual >= 0 && nota_atual <= 10) {
+        freq[nota_atual]++;
+    }
+    
+    // Chamada recursiva para o resto do vetor
+    calcula_frequencia_recursiva(notas, n - 1, freq);
+}
+
+// 2. Função recursiva para procurar a nota mais frequente (índice 0 a 10)
+void encontra_moda_recursiva(int freq[], int indice, int *nota_moda, int *max_ocorrencias) {
+    // Caso base: passou da nota máxima possível (10)
+    if (indice > 10) {
+        return;
+    }
+    
+    // Atualiza se encontrar uma frequência maior
+    if (freq[indice] > *max_ocorrencias) {
+        *max_ocorrencias = freq[indice];
+        *nota_moda = indice;
+    }
+    
+    // Chamada recursiva para a próxima nota possível
+    encontra_moda_recursiva(freq, indice + 1, nota_moda, max_ocorrencias);
+}
+
+// 3. Função recursiva para mostrar os alunos aprovados (nota > 6)
+void mostra_aprovados_recursiva(int notas[], int total_alunos, int indice_atual) {
+    // Caso base: percorreu todos os alunos
+    if (indice_atual == total_alunos) {
+        return;
+    }
+    
+    // Verifica se a nota do aluno atual é superior a 6
+    if (notas[indice_atual] > 6) {
+        printf("Aluno %d teve nota %d\n", indice_atual + 1, notas[indice_atual]);
+    }
+    
+    // Chamada recursiva avançando para o próximo aluno
+    mostra_aprovados_recursiva(notas, total_alunos, indice_atual + 1);
+}
+
+int main() {
+    // Vetor de teste simulando a pauta de X alunos numa prova de 10 questões
+    int notas[] = {5, 7, 8, 7, 10, 4, 7, 8, 6, 9};
+    int num_alunos = 10;
+    
+    // Vetor inicializado a zero para guardar a contagem de cada nota (0 a 10)
+    int freq[11] = {0};
+
+    // Execução do passo 1: preencher o vetor de frequências
+    calcula_frequencia_recursiva(notas, num_alunos, freq);
+
+    // Execução do passo 2: descobrir os valores máximos
+    int nota_mais_frequente = 0;
+    int max_ocorrencias = 0;
+    encontra_moda_recursiva(freq, 0, &nota_mais_frequente, &max_ocorrencias);
+
+    // Impressão dos resultados solicitados
+    printf("--- RESULTADOS ---\n");
+    printf("Nota mais frequente: %d\n", nota_mais_frequente);
+    printf("Quantidade de alunos com essa nota: %d\n\n", max_ocorrencias);
+
+    // Execução do passo 3: listar aprovados
+    printf("Alunos Aprovados (Nota > 6):\n");
+    mostra_aprovados_recursiva(notas, num_alunos, 0);
+
+    return 0;
+}
