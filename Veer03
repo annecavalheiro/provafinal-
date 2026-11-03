@@ -1,0 +1,46 @@
+#include <stdio.h>
+
+// Função auxiliar recursiva
+int existe_matricula(int matricula, int turma[], int n) {
+    if (n == 0) {
+        return 0;
+    }
+    if (turma[n - 1] == matricula) {
+        return 1;
+    }
+    return existe_matricula(matricula, turma, n - 1);
+}
+
+// Função principal recursiva
+int conta_matriculados_em_ambas(int turma1[], int n1, int turma2[], int n2) {
+    if (n1 == 0) {
+        return 0;
+    }
+    
+    int aluno_atual = turma1[n1 - 1];
+    
+    if (existe_matricula(aluno_atual, turma2, n2)) {
+        return 1 + conta_matriculados_em_ambas(turma1, n1 - 1, turma2, n2);
+    } else {
+        return conta_matriculados_em_ambas(turma1, n1 - 1, turma2, n2);
+    }
+}
+
+int main() {
+    // Declaração dos vetores com as dimensões fornecidas
+    int nA = 150;
+    int nB = 220;
+    
+    int turma_A[150];
+    int turma_B[220];
+
+    // Aqui deve ser implementada a leitura das matrículas (ex: usando um ciclo for com scanf)
+    // para preencher turma_A e turma_B com os dados reais antes de chamar a função.
+
+    // Executa a contagem recursiva
+    int alunos_em_comum = conta_matriculados_em_ambas(turma_A, nA, turma_B, nB);
+
+    printf("Numero de alunos matriculados em ambas as turmas: %d\n", alunos_em_comum);
+
+    return 0;
+}
