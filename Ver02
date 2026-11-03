@@ -1,0 +1,51 @@
+#include <stdio.h>
+
+// Versão iterativa utilizando o ciclo for
+int conta_iterativo(int v[], int n, int x) {
+    int contagem = 0;
+    for (int i = 0; i < n; i++) {
+        if (v[i] == x) {
+            contagem++;
+        }
+    }
+    return contagem;
+}
+
+// Versão recursiva
+int conta_recursivo(int v[], int n, int x) {
+    // Caso base: se o tamanho a analisar for 0, não há mais ocorrências
+    if (n == 0) {
+        return 0;
+    }
+    
+    // Verifica o último elemento atual (n - 1) e soma à chamada recursiva do resto do vetor
+    if (v[n - 1] == x) {
+        return 1 + conta_recursivo(v, n - 1, x);
+    } else {
+        return conta_recursivo(v, n - 1, x);
+    }
+}
+
+int main() {
+    // Vetor de teste
+    int v[] = {3, 8, 2, 8, 5, 8, 1};
+    int n = 7; // Tamanho do vetor
+    int x = 8; // Valor a procurar
+
+    // Execução de ambas as funções
+    int resultado_for = conta_iterativo(v, n, x);
+    int resultado_rec = conta_recursivo(v, n, x);
+
+    // Impressão dos resultados
+    printf("Ocorrencias encontradas (Versao Iterativa): %d\n", resultado_for);
+    printf("Ocorrencias encontradas (Versao Recursiva): %d\n", resultado_rec);
+
+    // Confirmação solicitada no enunciado
+    if (resultado_for == resultado_rec) {
+        printf("Confirmacao: Ambas as versoes dao o mesmo resultado.\n");
+    } else {
+        printf("Erro: Os resultados sao diferentes.\n");
+    }
+
+    return 0;
+}
